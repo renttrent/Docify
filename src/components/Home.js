@@ -4,6 +4,7 @@ import Blockies from "react-blockies";
 
 export default function Home({ account, network, ipfs }) {
   const [buffer, setBuffer] = useState("");
+  const [fileName, setFileName] = useState("Upload File Here");
 
   const readFile = (e) => {
     e.preventDefault();
@@ -14,14 +15,20 @@ export default function Home({ account, network, ipfs }) {
       console.log(Buffer(reader.result));
       setBuffer(Buffer(reader.result));
     };
+
+    setFileName(file.name);
   };
-  const uploadIPFS = (e) => {
+  const uploadIPFS = async (e) => {
     e.preventDefault();
-    const fileobject = {
-      content: buffer,
-    };
-    const result = await ipfs.add(fileobject);
-    console.info(result);
+
+    if (buffer) {
+      const file = await ipfs.add(buffer, (error, res) => {
+        console.error(error);
+        console.info(res);
+      });
+      const fileHash = file[0]["hash"];
+      console.log(fileHash);
+    }
   };
 
   return (
@@ -39,13 +46,12 @@ export default function Home({ account, network, ipfs }) {
             </h3>
           </Row>
         </Container>
-        <Button variant="outline-success">Disconnect</Button>
       </Jumbotron>
       <Form>
         <Form.Group>
           <Form.File
             id="custom-file"
-            label="Upload your document"
+            label={fileName}
             custom
             onChange={readFile}
           />

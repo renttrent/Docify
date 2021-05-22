@@ -1,10 +1,68 @@
 import React from "react";
-import { NavDropdown, Nav, Navbar, Button, Form } from "react-bootstrap";
-import { Route, Link } from "react-router-dom";
+import { Nav, Navbar, Button, Form, Spinner } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 import Logo from "./svg/Logo";
 
-export default function NavbarComponent() {
+export default function NavbarComponent({
+  connectMetamask,
+  m_pending,
+  m_error,
+}) {
+  function ButtonComponent() {
+    if (window.ethereum.isConnected()) {
+      return (
+        <Button variant="outline-success" onClick={connectMetamask}>
+          Connected
+          {m_pending === true && <span> </span>}
+          {m_pending === true && (
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />
+          )}
+        </Button>
+      );
+    } else {
+      if (m_error) {
+        return (
+          <Button variant="success" onClick={connectMetamask}>
+            Connect to wallet
+            {m_pending === true && <span> </span>}
+            {m_pending === true && (
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            )}
+          </Button>
+        );
+      } else {
+        return (
+          <Button variant="danger" onClick={connectMetamask}>
+            Could not connect
+            {m_pending === true && <span> </span>}
+            {m_pending === true && (
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            )}
+          </Button>
+        );
+      }
+    }
+  }
+
   return (
     <Navbar
       expand="lg"
@@ -26,15 +84,7 @@ export default function NavbarComponent() {
           </Nav.Link>
         </Nav>
         <Form inline>
-          {/* <FormControl type="text" placeholder="Search" className="mr-sm-2" /> */}
-          <Button
-            variant="success"
-            onClick={function () {
-              console.log("click");
-            }}
-          >
-            Connect to wallet
-          </Button>
+          <ButtonComponent />
         </Form>
       </Navbar.Collapse>
     </Navbar>
