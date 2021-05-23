@@ -21,14 +21,16 @@ export default function Home({ account, network, ipfs }) {
   const uploadIPFS = async (e) => {
     e.preventDefault();
 
-    if (buffer) {
-      const file = await ipfs.add(buffer, (error, res) => {
-        console.error(error);
-        console.info(res);
-      });
-      const fileHash = file[0]["hash"];
-      console.log(fileHash);
-    }
+    const file = await ipfs.add(buffer, (error, res) => {
+      console.error(error);
+      console.info(res);
+    });
+    console.log(file);
+    // for await (var file of ipfs.add(buffer)) {
+    //   // const fileHash = file[0]["hash"];
+    //   console.log(file);
+    //   console.log(file.cid.string);
+    // }
   };
 
   return (

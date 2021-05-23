@@ -11,11 +11,11 @@ import { useWeb3Context } from "./contexts/Web3";
 import { unlockAccount } from "./api/web3";
 import { useAsync } from "./components/useAsync";
 
-const ipfsClient = require("ipfs-http-client");
+import ipfsClient from "ipfs-http-client";
 const ipfs = ipfsClient({
   host: "ipfs.infura.io",
   port: 5001,
-  protocol: "http",
+  protocol: "https",
   apiPath: "/ipfs/api/v0",
 });
 
