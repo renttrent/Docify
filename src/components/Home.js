@@ -1,27 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Container, Jumbotron, Button, Row } from "react-bootstrap";
 import Blockies from "react-blockies";
 
 import Document from "../abis/Document.json";
-import Web3 from "web3";
 
-const web3 = new Web3(window.ethereum || "localhost:8545");
-export default function Home({ account, ipfs }) {
+export default function Home({ web3, account, ipfs }) {
   const [buffer, setBuffer] = useState("");
   const [fileName, setFileName] = useState("Upload File Here");
   const [ipfsHash, setIpfsHash] = useState("");
   const [contract, setContract] = useState(null);
 
-  async function loadContract() {
-    const netId = parseInt(window.ethereum.chainId);
-    const netData = Document.networks[netId];
+  useEffect(() => {
+    const netData = Document.networks[parseInt(window.ethereum.chainId)];
+
     if (netData) {
-      const abi = Document.abi;
-      const address = netData.address;
-      const c = new web3.eth.Contract(abi, address);
+      const c = new web3.eth.Contract(Document.abi, netData.address);
       setContract(c);
     }
-  }
+  }, []);
 
   function getNetwork() {
     const netId = parseInt(window.ethereum.chainId);
@@ -61,6 +57,7 @@ export default function Home({ account, ipfs }) {
 
     setFileName(file.name);
   };
+
   const uploadIPFS = async (e) => {
     e.preventDefault();
 
@@ -68,20 +65,27 @@ export default function Home({ account, ipfs }) {
       console.error(error);
       console.info(res);
     });
+
     const { path } = file;
-    console.log(path);
-    loadContract();
+    console.log("ipfs: " + path);
+
+    console.log("contract: " + contract);
+
     if (contract) {
-      await contract.methods
+      contract.methods
         .addDocument(path)
         .send({ from: account })
         .then((r) => {
           setIpfsHash(path);
         });
 
-      console.log(await contract.methods.getDocument().call());
+      contract.methods
+        .getDocument()
+        .call()
+        .then((r) => {
+          console.log("get: " + r);
+        });
     }
-    console.log(ipfsHash);
   };
 
   return (

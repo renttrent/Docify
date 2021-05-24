@@ -9,9 +9,13 @@ import { useWeb3Context } from "./contexts/Web3";
 import { unlockAccount } from "./api/web3";
 import { useAsync } from "./components/useAsync";
 
+import Web3 from "web3";
+
 import ipfsClient from "ipfs-http-client";
 import { MetamaskError } from "./components/MetamaskError";
 const ipfs = ipfsClient("/dnsaddr/ipfs.infura.io/tcp/5001/https");
+
+const web3 = new Web3(window.ethereum);
 
 export default function App() {
   const {
@@ -31,7 +35,7 @@ export default function App() {
     }
   }
 
-  if (window.ethereum) {
+  if (web3.currentProvider) {
     return (
       <Router>
         <NavbarComponent
@@ -51,6 +55,7 @@ export default function App() {
                   network={"private"}
                   ipfs={ipfs}
                   netId={netId}
+                  web3={web3}
                 />
               );
             }}
