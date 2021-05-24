@@ -2,6 +2,7 @@
   "name": "recordverificationv1",
   "version": "1.0.0",
   "description": "Record Verification App",
+  "proxy": "https://ipfs.infura.io",
   "dependencies": {
     "@download/blockies": "^1.0.3",
     "@metamask/detect-provider": "^1.2.0",
@@ -45,6 +46,5 @@
     "not op_mini all"
   ],
   "author": "Rei Balla",
-  "license": "ISC",
-  "proxy": "https://cors-anywhere.herokuapp.com"
+  "license": "ISC"
 }

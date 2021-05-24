@@ -5,15 +5,16 @@ import { Link } from "react-router-dom";
 import Logo from "./svg/Logo";
 
 export default function NavbarComponent({
+  account,
   connectMetamask,
   m_pending,
   m_error,
 }) {
   function ButtonComponent() {
-    if (window.ethereum.isConnected()) {
+    if (account) {
       return (
         <Button variant="outline-success" onClick={connectMetamask}>
-          Connected
+          Change account
           {m_pending === true && <span> </span>}
           {m_pending === true && (
             <Spinner
@@ -27,39 +28,21 @@ export default function NavbarComponent({
         </Button>
       );
     } else {
-      if (m_error) {
-        return (
-          <Button variant="success" onClick={connectMetamask}>
-            Connect to wallet
-            {m_pending === true && <span> </span>}
-            {m_pending === true && (
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />
-            )}
-          </Button>
-        );
-      } else {
-        return (
-          <Button variant="danger" onClick={connectMetamask}>
-            Could not connect
-            {m_pending === true && <span> </span>}
-            {m_pending === true && (
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />
-            )}
-          </Button>
-        );
-      }
+      return (
+        <Button variant="success" onClick={connectMetamask}>
+          Connect to wallet
+          {m_pending === true && <span> </span>}
+          {m_pending === true && (
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />
+          )}
+        </Button>
+      );
     }
   }
 

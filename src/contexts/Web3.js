@@ -6,15 +6,17 @@ import React, {
   useMemo,
 } from "react";
 import Web3 from "web3";
-import { subscribeToAccount } from "../api/web3";
+import { subscribeToAccount, subscribeToNetID } from "../api/web3";
 
 const INITIAL_STATE = {
   type: "",
   account: "",
+  netId: 0,
   web3: null,
 };
 
 const UPDATE_ACCOUNT = "UPDATE_ACCOUNT";
+const UPDATE_NET_ID = "UPDATE_NET_ID";
 
 function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
@@ -28,6 +30,14 @@ function reducer(state = INITIAL_STATE, action) {
         account,
       };
     }
+    case UPDATE_NET_ID: {
+      const { netId } = action;
+
+      return {
+        ...state,
+        netId,
+      };
+    }
     default:
       return state;
   }
@@ -36,6 +46,7 @@ function reducer(state = INITIAL_STATE, action) {
 const Web3Context = createContext({
   state: INITIAL_STATE,
   updateAccount: () => {},
+  updateNetId: () => {},
 });
 
 export function useWeb3Context() {
@@ -52,12 +63,20 @@ export const Provider = ({ children }) => {
     });
   }
 
+  function updateNetId(data) {
+    dispatch({
+      type: UPDATE_NET_ID,
+      ...data,
+    });
+  }
+
   return (
     <Web3Context.Provider
       value={useMemo(
         () => ({
           state,
           updateAccount,
+          updateNetId,
         }),
         [state]
       )}
@@ -68,7 +87,7 @@ export const Provider = ({ children }) => {
 };
 
 export function Updater() {
-  const { state } = useWeb3Context();
+  const { state, updateNetId } = useWeb3Context();
   useEffect(() => {
     if (state.web3) {
       const unsubscribe = subscribeToAccount(state.web3, (error, account) => {
@@ -82,6 +101,24 @@ export function Updater() {
       return unsubscribe;
     }
   }, [state.web3, state.account]);
+
+  useEffect(() => {
+    if (state.web3) {
+      const unsubscribe = subscribeToAccount(state.web3, (error, netId) => {
+        if (error) {
+          console.log(error);
+        }
+        if (netId) {
+          if (state.netId === 0) {
+            updateNetId({ netId });
+          } else if (netId !== state.netId) {
+            window.location.reload();
+          }
+        }
+      });
+      return unsubscribe;
+    }
+  }, [state.web3, state.netId, updateNetId]);
 
   return null;
 }

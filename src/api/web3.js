@@ -28,3 +28,18 @@ export function subscribeToAccount(web3, callback) {
     clearInterval(id);
   };
 }
+
+export function subscribeToNetID(web3, callback) {
+  const id = setInterval(async () => {
+    try {
+      const netId = await web3.eth.net.getId();
+      callback(null, netId);
+    } catch (e) {
+      callback(e, null);
+    }
+  }, 1000);
+
+  return () => {
+    clearInterval(id);
+  };
+}
