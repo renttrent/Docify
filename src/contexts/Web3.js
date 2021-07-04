@@ -5,18 +5,23 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import Web3 from "web3";
-import { subscribeToAccount, subscribeToNetID } from "../api/web3";
+import {
+  subscribeToAccount,
+  subscribeToNetID,
+  subscribeToContract,
+} from "../api/web3";
 
 const INITIAL_STATE = {
   type: "",
   account: "",
   netId: 0,
   web3: null,
+  contract: null,
 };
 
 const UPDATE_ACCOUNT = "UPDATE_ACCOUNT";
 const UPDATE_NET_ID = "UPDATE_NET_ID";
+const UPDATE_CONTRACT = "UPDATE_CONTRACT";
 
 function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
@@ -38,20 +43,25 @@ function reducer(state = INITIAL_STATE, action) {
         netId,
       };
     }
+    case UPDATE_CONTRACT: {
+      const { contract } = action;
+
+      return {
+        ...state,
+        contract,
+      };
+    }
     default:
       return state;
   }
 }
 
-const Web3Context = createContext({
+export const Web3Context = createContext({
   state: INITIAL_STATE,
   updateAccount: () => {},
   updateNetId: () => {},
+  updateContract: () => {},
 });
-
-export function useWeb3Context() {
-  return useContext(Web3Context);
-}
 
 export const Provider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
@@ -70,6 +80,13 @@ export const Provider = ({ children }) => {
     });
   }
 
+  function updateContract(data) {
+    dispatch({
+      type: UPDATE_CONTRACT,
+      ...data,
+    });
+  }
+
   return (
     <Web3Context.Provider
       value={useMemo(
@@ -77,6 +94,7 @@ export const Provider = ({ children }) => {
           state,
           updateAccount,
           updateNetId,
+          updateContract,
         }),
         [state]
       )}
@@ -86,8 +104,8 @@ export const Provider = ({ children }) => {
   );
 };
 
-export function Updater() {
-  const { state, updateNetId } = useWeb3Context();
+export const Updater = () => {
+  const { state, updateNetId, updateContract } = useContext(Web3Context);
   useEffect(() => {
     if (state.web3) {
       const unsubscribe = subscribeToAccount(state.web3, (error, account) => {
@@ -104,7 +122,7 @@ export function Updater() {
 
   useEffect(() => {
     if (state.web3) {
-      const unsubscribe = subscribeToAccount(state.web3, (error, netId) => {
+      const unsubscribe = subscribeToNetID(state.web3, (error, netId) => {
         if (error) {
           console.log(error);
         }
@@ -120,5 +138,19 @@ export function Updater() {
     }
   }, [state.web3, state.netId, updateNetId]);
 
-  return null;
-}
+  useEffect(() => {
+    if (state.web3) {
+      const unsubscribe = subscribeToContract(state.web3, (error, contract) => {
+        if (error) {
+          console.log(error);
+        }
+        if (contract) {
+          updateContract({ contract });
+        }
+      });
+      return unsubscribe;
+    }
+  }, [state.web3, state.contract, updateContract]);
+
+  return <></>;
+};

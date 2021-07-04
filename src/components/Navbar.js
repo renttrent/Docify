@@ -1,30 +1,29 @@
 import React from "react";
 import { Nav, Navbar, Button, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
-
+import UserContext from '../contexts/UserContext';
 import Logo from "./svg/Logo";
 
-export default function NavbarComponent({
-  account,
-  connectMetamask,
-  m_pending,
-  m_error,
-}) {
+export default function NavbarComponent() {
+
+  const userContext = React.useContext(UserContext);
+  const {web3, contract, netId, accounts} = userContext;
+  const [account, setAccount] = React.useState('');
+  const [m_pending, setM_pending] = React.useState(false);
+
+  const connectMetamask = async () => {
+    console.log(contract)
+    await window.ethereum.enable();
+    if (accounts){
+      setAccount(accounts[0]);
+    }
+  }
+
   function ButtonComponent() {
     if (account) {
       return (
-        <Button variant="outline-success" onClick={connectMetamask}>
-          Change account
-          {m_pending === true && <span> </span>}
-          {m_pending === true && (
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-            />
-          )}
+        <Button variant="outline-success" disabled>
+          Connected
         </Button>
       );
     } else {

@@ -1,4 +1,5 @@
 import Web3 from "web3";
+import Docify from "../abis/Docify.json";
 
 export async function unlockAccount() {
   const { ethereum } = window;
@@ -41,5 +42,24 @@ export function subscribeToNetID(web3, callback) {
 
   return () => {
     clearInterval(id);
+  };
+}
+
+export function subscribeToContract(web3, callback) {
+  const contract = setInterval(async () => {
+    try {
+      const netData = Docify.networks[parseInt(window.ethereum.chainId)];
+
+      if (netData) {
+        const c = new web3.eth.Contract(Docify.abi, netData.address);
+        callback(null, c);
+      }
+    } catch (e) {
+      callback(e, null);
+    }
+  }, 1000);
+
+  return () => {
+    clearInterval(contract);
   };
 }

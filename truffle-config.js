@@ -13,10 +13,11 @@ module.exports = {
     ropsten: {
       provider: function () {
         return new HDWalletProvider(
-          privateKeys.split(","),
+          privateKeys.replaceAll(",", " "),
           `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`
         );
       },
+      network_id: 3,
     },
   },
   contracts_directory: "./src/contracts/",

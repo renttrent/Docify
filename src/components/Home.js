@@ -1,26 +1,57 @@
-import React, { useState, useEffect } from "react";
-import { Form, Container, Jumbotron, Button, Row } from "react-bootstrap";
+import React, { useState, useEffect, useContext, useMemo } from "react";
+import {
+  Form,
+  Container,
+  Jumbotron,
+  Button,
+  Row,
+  Modal,
+  Spinner,
+} from "react-bootstrap";
+import UserContext from '../contexts/UserContext';
+
 import Blockies from "react-blockies";
 
-import Document from "../abis/Document.json";
+import Docify from "../abis/Docify.json";
 
-export default function Home({ web3, account, ipfs }) {
+export default function Home({ ipfs, m_error }) {
   const [buffer, setBuffer] = useState("");
   const [fileName, setFileName] = useState("Upload File Here");
   const [ipfsHash, setIpfsHash] = useState("");
-  const [contract, setContract] = useState(null);
+
+  const userContext = useContext(UserContext);
+  const {web3, accounts, netId, contract} = userContext;
+  const [account, setAccount] = useState('');
+
+  const [txErr, setTxErr] = useState(null);
+  const [show, setShow] = useState(false);
+
+  const [ipfsLoading, setIpfsLoading] = useState(false);
+  // const [currentProvider, setCurrentProvider] = useState(null);
+
+  useEffect(()=>{
+    if (accounts) {
+      setAccount(accounts[0]);
+    }
+  }, [accounts]);
+
+  const handleClose = () => {
+    setShow(false);
+    setTxErr(null);
+  };
+
+  const handleShow = () => setShow(true);
 
   useEffect(() => {
-    const netData = Document.networks[parseInt(window.ethereum.chainId)];
+  }, [ipfsLoading]);
 
-    if (netData) {
-      const c = new web3.eth.Contract(Document.abi, netData.address);
-      setContract(c);
+  useEffect(() => {
+    if (m_error) {
+      handleShow();
     }
-  }, []);
+  }, [m_error]);
 
-  function getNetwork() {
-    const netId = parseInt(window.ethereum.chainId);
+  const getNetwork = () => {
     switch (netId) {
       case 1:
         return "Mainnet";
@@ -35,14 +66,19 @@ export default function Home({ web3, account, ipfs }) {
       default:
         return "Private network";
     }
-  }
+  };
 
   const accountToDisplay = () => {
-    return (
-      account.substr(0, 5) +
-      "..." +
-      account.substr(account.length - 3, account.length)
-    );
+    
+    if (accounts) {
+      return (
+        account.substr(0, 5) +
+        "..." +
+        account.substr(account.length - 3, account.length)
+      );
+    } else {
+      return '';
+    }
   };
 
   const readFile = (e) => {
@@ -60,6 +96,7 @@ export default function Home({ web3, account, ipfs }) {
 
   const uploadIPFS = async (e) => {
     e.preventDefault();
+    setIpfsLoading(true);
 
     const file = await ipfs.add(buffer, (error, res) => {
       console.error(error);
@@ -70,23 +107,48 @@ export default function Home({ web3, account, ipfs }) {
     console.log("ipfs: " + path);
 
     console.log("contract: " + contract);
-
+    
     if (contract) {
+      
+      const hashFunction = '0x' + path.slice(0, 2).toString('hex');
+      const digest = '0x' + path.slice(2).toString('hex');
+      const size = path.length - 2;
+      console.log(hashFunction, digest, size);
       contract.methods
-        .addDocument(path)
-        .send({ from: account })
+        .issue(path)
+        .send({ from: account, gas: 1000000 })
         .then((r) => {
           setIpfsHash(path);
-        });
-
-      contract.methods
-        .getDocument()
-        .call()
-        .then((r) => {
-          console.log("get: " + r);
+        })
+        .catch((e) => {
+          console.log(e);
+          setTxErr(txErr);
+          handleShow();
         });
     }
+
+    setIpfsLoading(false);
   };
+
+  function CustomModal() {
+    console.log(txErr);
+    return (
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Metamask Error</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Error Message: {m_error ? m_error : " "}
+          {txErr ? txErr : " "}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 
   return (
     <>
@@ -118,10 +180,24 @@ export default function Home({ web3, account, ipfs }) {
             />
           </Form.Group>
           <Button variant="primary" type="button" onClick={uploadIPFS}>
-            Submit
+            {ipfsLoading ? (
+              <>
+                {"Submitting "}
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+              </>
+            ) : (
+              "Submit"
+            )}
           </Button>
         </Form>
       </Container>
+      {/* {show ? <CustomModal /> : <span></span>} */}
     </>
   );
 }
