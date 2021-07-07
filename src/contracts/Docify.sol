@@ -5,16 +5,22 @@ pragma solidity ^0.5.16;
 
 contract Docify {
     // STRUCTS
-    struct Multihash {
-        bytes32 digest;
-        uint8 hashFunction;
-        uint8 size;
-    }
+    // struct Multihash {
+    //     bytes32 digest;
+    //     uint8 hashFunction;
+    //     uint8 size;
+    // }
 
+    // struct Record {
+    //     bytes32 hashVerify;
+    //     uint256 id;
+    //     Multihash CID;
+    //     address owner;
+    // }
     struct Record {
         bytes32 hashVerify;
         uint256 id;
-        Multihash CID;
+        string CID;
         address owner;
     }
     // END STRUCT
@@ -46,23 +52,25 @@ contract Docify {
     // END MODIFIERS
 
     // FUNCTIONS
-    function issue(
-        bytes32 _digest,
-        uint8 _hashFunction,
-        uint8 _size
-    ) public {
+    function issue(string memory _CID) public {
         Record memory rec;
-        Multihash memory ipfs;
+        // Multihash memory ipfs;
 
-        ipfs.digest = _digest;
-        ipfs.hashFunction = _hashFunction;
-        ipfs.size = _size;
+        // ipfs.digest = _digest;
+        // ipfs.hashFunction = _hashFunction;
+        // ipfs.size = _size;
 
-        rec.CID = ipfs;
+        rec.CID = _CID;
         rec.owner = msg.sender;
         rec.id = nextID;
         rec.hashVerify = keccak256(
-            abi.encode(address(this), msg.sender, rec.id, block.timestamp)
+            abi.encode(
+                address(this),
+                msg.sender,
+                rec.CID,
+                rec.id,
+                block.timestamp
+            )
         );
 
         records[rec.id] = rec;

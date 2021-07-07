@@ -1,23 +1,34 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Nav, Navbar, Button, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import UserContext from '../contexts/UserContext';
+import UserContext from "../contexts/UserContext";
 import Logo from "./svg/Logo";
 
 export default function NavbarComponent() {
-
   const userContext = React.useContext(UserContext);
-  const {web3, contract, netId, accounts} = userContext;
-  const [account, setAccount] = React.useState('');
+  const { web3, contract, netId, accounts } = userContext;
+  const [account, setAccount] = React.useState("");
   const [m_pending, setM_pending] = React.useState(false);
 
-  const connectMetamask = async () => {
-    console.log(contract)
-    await window.ethereum.enable();
-    if (accounts){
+  useEffect(() => {
+    const updateAccounts = async () => {
+      const accounts = await web3.eth.getAccounts();
       setAccount(accounts[0]);
+    };
+    if (window.ethereum.isConnected()) updateAccounts();
+  }, [accounts, web3]);
+
+  const connectMetamask = async () => {
+    if (window.ethereum.isConnected()) {
+    } else {
+      await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      if (accounts) {
+        setAccount(accounts[0]);
+      }
     }
-  }
+  };
 
   function ButtonComponent() {
     if (account) {
@@ -58,9 +69,6 @@ export default function NavbarComponent() {
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
-          <Nav.Link as={Link} to="/about">
-            About
-          </Nav.Link>
           <Nav.Link as={Link} to="/docs">
             My Documents
           </Nav.Link>

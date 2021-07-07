@@ -8,11 +8,15 @@ import {
   Modal,
   Spinner,
 } from "react-bootstrap";
-import UserContext from '../contexts/UserContext';
+import UserContext from "../contexts/UserContext";
+import multihashes from "multihashes";
 
 import Blockies from "react-blockies";
 
 import Docify from "../abis/Docify.json";
+import base58 from "bs58";
+import { Link } from "react-router-dom";
+import GenerateLink from "./GenerateLink";
 
 export default function Home({ ipfs, m_error }) {
   const [buffer, setBuffer] = useState("");
@@ -20,20 +24,22 @@ export default function Home({ ipfs, m_error }) {
   const [ipfsHash, setIpfsHash] = useState("");
 
   const userContext = useContext(UserContext);
-  const {web3, accounts, netId, contract} = userContext;
-  const [account, setAccount] = useState('');
-
+  const { web3, accounts, netId, contract } = userContext;
+  const [account, setAccount] = useState("");
   const [txErr, setTxErr] = useState(null);
   const [show, setShow] = useState(false);
 
   const [ipfsLoading, setIpfsLoading] = useState(false);
   // const [currentProvider, setCurrentProvider] = useState(null);
 
-  useEffect(()=>{
-    if (accounts) {
+  useEffect(() => {
+    const updateAccounts = async () => {
+      const accounts = await web3.eth.getAccounts();
       setAccount(accounts[0]);
-    }
-  }, [accounts]);
+    };
+
+    if (window.ethereum.isConnected()) updateAccounts();
+  }, [accounts, web3]);
 
   const handleClose = () => {
     setShow(false);
@@ -42,8 +48,7 @@ export default function Home({ ipfs, m_error }) {
 
   const handleShow = () => setShow(true);
 
-  useEffect(() => {
-  }, [ipfsLoading]);
+  useEffect(() => {}, [ipfsLoading]);
 
   useEffect(() => {
     if (m_error) {
@@ -69,15 +74,14 @@ export default function Home({ ipfs, m_error }) {
   };
 
   const accountToDisplay = () => {
-    
-    if (accounts) {
+    if (accounts !== undefined && accounts.length !== 0) {
       return (
         account.substr(0, 5) +
         "..." +
         account.substr(account.length - 3, account.length)
       );
     } else {
-      return '';
+      return "";
     }
   };
 
@@ -107,13 +111,19 @@ export default function Home({ ipfs, m_error }) {
     console.log("ipfs: " + path);
 
     console.log("contract: " + contract);
-    
+
     if (contract) {
-      
-      const hashFunction = '0x' + path.slice(0, 2).toString('hex');
-      const digest = '0x' + path.slice(2).toString('hex');
-      const size = path.length - 2;
-      console.log(hashFunction, digest, size);
+      // let mh = multihashes.fromB58String(Buffer.from(path));
+
+      // let hf = new DataView(mh.slice(0, 2).buffer, 0);
+      // const hashFunction = hf.getInt8(0, true);
+      // // console.log(web3.utils.hexToNumber(hashFunction));
+      // const digest = web3.utils.soliditySha3({
+      //   t: "bytes32",
+      //   v: "0x" + Buffer.from(mh.slice(2)).toString("hex"),
+      // });
+      // const size = mh.length - 2;
+      // console.log(hashFunction, digest, size);
       contract.methods
         .issue(path)
         .send({ from: account, gas: 1000000 })
@@ -196,6 +206,7 @@ export default function Home({ ipfs, m_error }) {
             )}
           </Button>
         </Form>
+        {/* <Link to={"/sign/jhsdfgyy34isdhfu3"}> Lila </Link> */}
       </Container>
       {/* {show ? <CustomModal /> : <span></span>} */}
     </>
